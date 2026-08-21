@@ -40,7 +40,7 @@
     },
     "fortiGateInstanceArchitecture": {
       "type": "string",
-      "defaultValue": "x64",
+      "defaultValue": "_g2",
       "allowedValues": [
         "x64",
         "_g2",
@@ -64,9 +64,11 @@
     },
     "fortiGateImageVersion_x64_g2": {
       "type": "string",
-      "defaultValue": "7.6.6",
+      "defaultValue": "8.0.0",
       "allowedValues": [
-        "7.6.6"
+        "8.0.0",
+        "7.6.7",
+        "7.4.12"        
       ],
       "metadata": {
         "description": "Select the image version supporting Generation 2 VMs"
@@ -74,9 +76,11 @@
     },
     "fortiGateImageVersion_arm64": {
       "type": "string",
-      "defaultValue": "7.6.6",
+      "defaultValue": "8.0.0",
       "allowedValues": [
-        "7.6.6",
+        "8.0.0",
+        "7.6.7",
+        "7.4.12",        
         "7.4.11",
         "7.2.13"
       ],
@@ -107,7 +111,7 @@
     },
     "instanceType_x64": {
       "type": "string",
-      "defaultValue": "Standard_D4s_v3",
+      "defaultValue": "Standard_D4s_v5",
       "allowedValues": [
         "Standard_F2s",
         "Standard_F4s",
@@ -179,14 +183,15 @@
     },
     "instanceType_x64_g2": {
       "type": "string",
-      "defaultValue": "Standard_D4_v5",
+      "defaultValue": "Standard_D4s_v6",
       "allowedValues": [
-        "Standard_D2_v4",
+        "Standard_D4s_v5",
+        "Standard_D2s_v4",
         "Standard_D4_v4",
         "Standard_D8_v4",
         "Standard_D16_v4",
         "Standard_D32_v4",
-        "Standard_D2s_v4",
+        "Standard_D2_v4",
         "Standard_D4s_v4",
         "Standard_D8s_v4",
         "Standard_D16s_v4",
@@ -207,7 +212,6 @@
         "Standard_D16_v5",
         "Standard_D32_v5",
         "Standard_D2s_v5",
-        "Standard_D4s_v5",
         "Standard_D8s_v5",
         "Standard_D16s_v5",
         "Standard_D32s_v5",
@@ -226,41 +230,46 @@
         "Standard_D8s_v6",
         "Standard_D16s_v6",
         "Standard_D32s_v6",
-        "Standard_D2ds_v6",
-        "Standard_D4ds_v6",
-        "Standard_D8ds_v6",
-        "Standard_D16ds_v6",
-        "Standard_D32ds_v6",
         "Standard_D2ls_v6",
         "Standard_D4ls_v6",
         "Standard_D8ls_v6",
         "Standard_D16ls_v6",
         "Standard_D32ls_v6",
-        "Standard_D2lds_v6",
-        "Standard_D4lds_v6",
-        "Standard_D8lds_v6",
-        "Standard_D16lds_v6",
-        "Standard_D32lds_v6",
         "Standard_D2as_v6",
         "Standard_D4as_v6",
         "Standard_D8as_v6",
         "Standard_D16as_v6",
         "Standard_D32as_v6",
-        "Standard_D2ads_v6",
-        "Standard_D4ads_v6",
-        "Standard_D8ads_v6",
-        "Standard_D16ads_v6",
-        "Standard_D32ads_v6",
-        "Standard_D2als_v6",
-        "Standard_D4als_v6",
-        "Standard_D8als_v6",
-        "Standard_D16als_v6",
-        "Standard_D32als_v6",
-        "Standard_D2alds_v6",
-        "Standard_D4alds_v6",
-        "Standard_D8alds_v6",
-        "Standard_D16alds_v6",
-        "Standard_D32alds_v6"
+        "Standard_E2s_v6",
+        "Standard_E4s_v6",
+        "Standard_E8s_v6",
+        "Standard_E16s_v6",
+        "Standard_E32s_v6",
+        "Standard_F2als_v7",
+        "Standard_F4als_v7",
+        "Standard_F8als_v7",
+        "Standard_F16als_v7",
+        "Standard_F32als_v7",
+        "Standard_D2s_v7",
+        "Standard_D4s_v7",
+        "Standard_D8s_v7",
+        "Standard_D16s_v7",
+        "Standard_D32s_v7",
+        "Standard_D2ls_v7",
+        "Standard_D4ls_v7",
+        "Standard_D8ls_v7",
+        "Standard_D16ls_v7",
+        "Standard_D32ls_v7",
+        "Standard_D2as_v7",
+        "Standard_D4as_v7",
+        "Standard_D8as_v7",
+        "Standard_D16as_v7",
+        "Standard_D32as_v7",
+        "Standard_D2als_v7",
+        "Standard_D4als_v7",
+        "Standard_D8als_v7",
+        "Standard_D16als_v7",
+        "Standard_D32als_v7"
       ],
       "metadata": {
         "description": "Virtual Machine size selection - must be an instance that supports 4 NICs"
@@ -344,6 +353,24 @@
       ],
       "metadata": {
         "description": "choose how you want to get internet connectivity when you use internal loadbalancer"
+      }
+    },
+    "VMSecurityType": {
+      "type": "string",
+      "allowedValues": [
+        "Standard",
+        "TrustedLaunch"
+      ],
+      "defaultValue": "Standard",
+      "metadata": {
+        "description": "Deploy FortiGate VM with Advanced boot security available only for Gen2 VMs"
+      }
+    },
+    "VMSecurityTPM": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Accelerated connections provides an enhanced bandwidth at an additional cost"
       }
     },
     "availabilityOptions": {
@@ -643,8 +670,9 @@
     "VMInstanceArchitecture": "[if(equals(parameters('fortiGateInstanceArchitecture'),'x64'),'',parameters('fortiGateInstanceArchitecture'))]",
     "fortiGateImageSKU": "[concat(parameters('fortiGateLicenseType'),'_',take(replace(variables('fortiGateImageVersion'), '.',''), 2),variables('VMInstanceArchitecture'))]",
     "fortiGateImageVersion": "[if(equals(parameters('fortiGateInstanceArchitecture'), '_arm64'), parameters('fortiGateImageVersion_arm64'), if(equals(parameters('fortiGateInstanceArchitecture'), '_g2'),parameters('fortiGateImageVersion_x64_g2'),parameters('fortiGateImageVersion_x64')))]",
+    "MajorReleaseVersion": "[take(replace(variables('fortiGateImageVersion'), '.',''), 2)]",
     "instanceType": "[if(equals(parameters('fortiGateInstanceArchitecture'), '_arm64'), parameters('instanceType_arm64'), if(equals(parameters('fortiGateInstanceArchitecture'), '_g2'),parameters('instanceType_x64_g2'),parameters('instanceType_x64')))]",
-    "diskControllerType": "[if(and(equals(parameters('fortiGateInstanceArchitecture'), '_g2'),contains(parameters('instanceType_x64_g2'), '_v6')),'NVMe',json('null'))]",
+    "diskControllerType": "[if(and(equals(parameters('fortiGateInstanceArchitecture'), '_g2'),or(contains(parameters('instanceType_x64_g2'), '_v6'),contains(parameters('instanceType_x64_g2'), '_v7'))),'NVMe',json('null'))]",
     "availabilitySetName": "[concat(parameters('fortiGateNamePrefix'),'-availabilityset')]",
     "availabilitySetId": {
       "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
@@ -858,6 +886,17 @@
     "fastpathtag": {
       "fastpathenabled": "[if(and(equals(parameters('acceleratedNetworking'),'true'),parameters('acceleratedConnections')),'true','false')]"
     },
+    "LegacyNVA":{"LegacyVMNVA": "Use legacy MLX ConnectX NIC"},
+    "LegacyVMNVATag": "[if(or(equals(variables('MajorReleaseVersion'),'74'),equals(variables('MajorReleaseVersion'),'72'),equals(variables('MajorReleaseVersion'),'70')),variables('LegacyNVA'),json('{}'))]",
+    "VM.securityProfile":{
+          "securityType": "[parameters('VMSecurityType')]"
+    },
+    "VM.uefiSettings":{    
+          "uefiSettings": {
+                    "secureBootEnabled": "[equals(parameters('VMSecurityType'),'TrustedLaunch')]",
+                    "vTpmEnabled": "[parameters('VMSecurityTPM')]"
+                  }
+    },    
     "auxiliaryMode": "[if(and(equals(parameters('acceleratedNetworking'),'true'),parameters('acceleratedConnections')),'AcceleratedConnections','None')]",
     "auxiliarySku": "[if(and(equals(parameters('acceleratedNetworking'),'true'),parameters('acceleratedConnections')),parameters('acceleratedConnectionsSku'),'None')]"
   },
@@ -957,13 +996,15 @@
           {
             "name": "[parameters('subnet1Name')]",
             "properties": {
-              "addressPrefix": "[parameters('subnet1Prefix')]"
+              "addressPrefix": "[parameters('subnet1Prefix')]",
+              "defaultoutboundaccess": false
             }
           },
           {
             "name": "[parameters('subnet2Name')]",
             "properties": {
-              "addressPrefix": "[parameters('subnet2Prefix')]"
+              "addressPrefix": "[parameters('subnet2Prefix')]",
+              "defaultoutboundaccess": false
             }
           }
         ]
@@ -980,6 +1021,7 @@
       ],
       "properties": {
         "addressPrefix": "[parameters('subnet1Prefix')]",
+        "defaultoutboundaccess": false,
         "natGateway": {
           "id": "[resourceId('Microsoft.Network/natGateways', variables('natGWName'))]"
         }
@@ -1168,6 +1210,7 @@
               "frontendPort": 80,
               "backendPort": 80,
               "enableFloatingIP": true,
+              "disableOutboundSnat": true,
               "idleTimeoutInMinutes": 5
             },
             "name": "ExternalLBRule-FE-http"
@@ -1187,6 +1230,7 @@
               "frontendPort": 10551,
               "backendPort": 10551,
               "enableFloatingIP": true,
+              "disableOutboundSnat": true,
               "idleTimeoutInMinutes": 5
             },
             "name": "ExternalLBRule-FE-udp10551"
@@ -1201,6 +1245,25 @@
               "probeThreshold": 2
             },
             "name": "lbprobe"
+          }
+        ],
+        "outboundRules": [
+          {
+            "name": "Outbound",
+            "properties": {
+              "allocatedOutboundPorts": "0",
+              "protocol": "All",
+              "enableTcpReset": false,
+              "idleTimeoutInMinutes": 4,
+              "backendAddressPool": {
+                "id": "[variables('externalLBBEId')]"
+              },
+              "frontendIPConfigurations": [
+                {
+                  "id": "[variables('externalLBFEId')]"
+                }
+              ]
+            }
           }
         ]
       }
@@ -1410,7 +1473,7 @@
         "name": "nodeCopy",
         "count": "[parameters('fortiGateCount')]"
       },
-      "tags": "[ if(contains(parameters('tagsByResource'), 'Microsoft.Compute/virtualMachines'), union(parameters('fortinetTags'),parameters('tagsByResource')['Microsoft.Compute/virtualMachines']), parameters('fortinetTags')) ]",
+      "tags": "[ if(contains(parameters('tagsByResource'), 'Microsoft.Compute/virtualMachines'), union(variables('LegacyVMNVATag'),parameters('fortinetTags'),parameters('tagsByResource')['Microsoft.Compute/virtualMachines']), union(variables('LegacyVMNVATag'),parameters('fortinetTags'))) ]",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[concat(variables('fgVmName'),'-',copyIndex(1),'-nic1')]",
@@ -1420,7 +1483,7 @@
         "type": "SystemAssigned"
       },
       "zones": "[if(variables('useAZ'), array(add(1, mod(copyIndex(), length(variables('pipZones'))))), json('null'))]",
-      "plan": "[if(and(or(equals(variables('fortiGateImageSKU'),'fortinet_fg-vm'),equals(variables('fortiGateImageSKU'),'fortinet_fg-vm_arm64')),not(equals(parameters('customImageReference'),''))), json('null'), variables('virtualMachinePlan'))]",
+      "plan": "[if(and(equals(parameters('fortiGateLicenseType'),'fortinet_fg-vm_byol'),not(equals(parameters('customImageReference'),''))), json('null'), variables('virtualMachinePlan'))]",
       "properties": {
         "hardwareProfile": {
           "vmSize": "[variables('instanceType')]"
@@ -1432,8 +1495,9 @@
           "adminPassword": "[parameters('adminPassword')]",
           "customData": "[variables('customData')[copyIndex()]]"
         },
+        "securityProfile": "[if(equals(parameters('VMSecurityType'),'TrustedLaunch'),union(variables('VM.securityProfile'),variables('VM.uefiSettings')),json('null'))]",      
         "storageProfile": {
-          "imageReference": "[if(and(equals(variables('fortiGateImageSku'),'fortinet_fg-vm'),not(equals(parameters('customImageReference'),''))), variables('imageReferenceCustomImage'), variables('imageReferenceMarketplace'))]",
+          "imageReference": "[if(and(equals(parameters('fortiGateLicenseType'),'fortinet_fg-vm_byol'),not(equals(parameters('customImageReference'),''))), variables('imageReferenceCustomImage'), variables('imageReferenceMarketplace'))]",
           "diskControllerType": "[variables('diskControllerType')]",
           "osDisk": {
             "createOption": "FromImage"
