@@ -17,15 +17,21 @@ This Azure ARM template will automatically deploy a full working environment con
 - 2 FortiGate firewall's in an active/passive deployment
 - 1 external Azure Standard Load Balancer for communication with internet
 - 1 internal Azure Standard Load Balancer to receive all internal traffic and forwarding towards Azure Gateways connecting ExpressRoute or Azure VPN's
-- 1 VNET with 1 protected subnet and 4 subnets required for the FortiGate deployment (external, internal, ha mgmt and ha sync). If using an existing vnet, it must already have 5 subnets
+- 1 VNET with 1 protected subnet and 4 subnets required for the FortiGate deployment (external, internal, ha sync and (optional)ha management). If using an existing vnet, it must already have 5 subnets
 - 3 public IPs. The first public IP is for cluster access to/through the active FortiGate. The other two PIPs are for Management access
 - User Defined Routes (UDR) for the protected subnets
 
 ![active/passive design](images/fgt-ap.png)
 
+By default, the 2 FortiGate VMs are deployed with 4 NICs: the ha sync port (port3) and ha management port (port4) are kept on separate interfaces and subnets. Starting with fortios 7.0.1 ([bug id 670058](https://docs.fortinet.com/document/fortigate/7.0.1/fortios-release-notes/743723/new-features-or-enhancements)), the ha sync and ha management functions can be combined onto a single port (port3), reducing the deployment to 3 NICs per vm. When `3-NIC` is selected during deployment, the dedicated ha management subnet is not deployed and the management public ip is instead attached directly to port3's private ip. Selecting `3-NIC` also allows the use of instance types with only 3 NICs available.
+
+![active/passive design](images/fgt-ap-3nic.png)
+
 To enhance the availability of the solution VM can be installed in different Availability Zones instead of an Availability Set. If Availability Zones deployment is selected but the location does not support Availability Zones an Availability Set will be deployed. If Availability Zones deployment is selected and Availability Zones are available in the location, FortiGate A will be placed in Zone 1, FortiGate B will be placed in Zone 2.
 
 ![active/passive design](images/fgt-ap-az.png)
+
+![active/passive design](images/fgt-ap-az-3nic.png)
 
 This ARM template can also be used to extend or customized based on your requirements. Additional subnets besides the one's mentioned above are not automatically generated. By adapting the ARM templates you can add additional subnets which preferably require their own routing tables.
 
@@ -33,26 +39,40 @@ This ARM template can also be used to extend or customized based on your require
 
 The FortiGate solution can be deployed using the Azure Portal or Azure CLI. There are 4 variables needed to complete kickstart the deployment. The deploy.sh script will ask them automatically. When you deploy the ARM template the Azure Portal will request the variables as a requirement.
 
-- PREFIX : This prefix will be added to each of the resources created by the templates for easy of use, manageability and visibility.
-- LOCATION : This is the Azure region where the deployment will be deployed
-- USERNAME : The username used to login to the FortiGate GUI and SSH management UI.
-- PASSWORD : The password used for the FortiGate GUI and SSH management UI.
+- PREFIX : This prefix will be added to each of the resources created by the templates for easy of use, manageability and visibility
+- LOCATION : This is the Azure region where the deployment will take place
+- USERNAME : The username used to login to the FortiGate GUI and SSH management UI
+- PASSWORD : The password used for the FortiGate GUI and SSH management UI
 
 ### Azure Portal
 
 Azure Portal Wizard Template Deployment:
-[![Deploy Azure Portal Button](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ffortinet%2Fazure-templates%2Fmain%2FFortiGate%2FActive-Passive-ELB-ILB%2Fazuredeploy.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Ffortinet%2Fazure-templates%2Fmain%2FFortiGate%2FActive-Passive-ELB-ILB%2FcreateUiDefinition.json)
+[![Deploy Azure Portal Button](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ffortinet%2Fazure-templates%2Fmain%2FFortiGate%2FActive-Passive-ELB-ILB%2Fazuredeploy.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Ffortinet%2Fazure-templates%2Fmain%2FFortiGate%2FActive-Passive-ELB-ILB%2FcreateUiDefinition.json)
 
 Standard Custom Template Deployment:
-[![Deploy Azure Portal Button](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ffortinet%2Fazure-templates%2Fmain%2FFortiGate%2FActive-Passive-ELB-ILB%2Fazuredeploy.json)
+[![Deploy Azure Portal Button](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ffortinet%2Fazure-templates%2Fmain%2FFortiGate%2FActive-Passive-ELB-ILB%2Fazuredeploy.json)
 [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Ffortinet%2Fazure-templates$2Fmain%2FFortiGate%2FActive-Passive-ELB-ILB%2Fazuredeploy.json)
 
-As of March 2026, new FortiGate SKUs were introduced in the Azure Marketplace that provide access to the latest marketplace features. In specific regions (e.g. GovCloud, private offers, ...) and deployment scenarios, legacy SKUs are still required; [those templates can be found in the legacy directory](legacy/).
+As of March 2026, new FortiGate SKUs were introduced in the Azure Marketplace that provide access to the latest marketplace features. In specific regions (e.g. GovCloud, private offers, ...) and deployment scenarios, legacy SKUs are still required; [those templates can be found in the legacy directory](legacy/). FortiGate version 7.6 on generation 1 VMs, the templates focus on new deployments and Microsoft direction is generation 2 VMs, Azure Boost and the mana driver. More information can be found in this [technical tip](https://community.fortinet.com/fortigate-3/technical-tip-fortigate-vms-in-microsoft-azure-using-generation-1-vs-generation-2-vms-228759)
 
-- Marketplace information:
-  - Publisher: fortinet
-  - Offer: fortinet_fortigate-vm
-  - SKU / plan: fortinet_fg-vm_byol_70, fortinet_fg-vm_payg_70, fortinet_fg-vm_byol_72, fortinet_fg-vm_payg_72, fortinet_fg-vm_byol_74, fortinet_fg-vm_payg_74, fortinet_fg-vm_byol_76, fortinet_fg-vm_payg_76
+- marketplace information:
+  - publisher: fortinet
+  - offer: fortinet_fortigate-vm
+  - sku / plan:
+
+    | Version | Gen1 (x64) | Gen2 (x64) | ARM64 |
+    | --- | --- | --- | --- |
+    | 7.0 | fortinet_fg-vm_byol_70, fortinet_fg-vm_payg_70 | - | - |
+    | 7.2 | fortinet_fg-vm_byol_72, fortinet_fg-vm_payg_72 | - | fortinet_fg-vm_byol_72_arm64, fortinet_fg-vm_payg_72_arm64 |
+    | 7.4 | fortinet_fg-vm_byol_74, fortinet_fg-vm_payg_74 | fortinet_fg-vm_byol_74_g2, fortinet_fg-vm_payg_74_g2 | fortinet_fg-vm_byol_74_arm64, fortinet_fg-vm_payg_74_arm64 |
+    | 7.6 | fortinet_fg-vm_byol_76, fortinet_fg-vm_payg_76 | fortinet_fg-vm_byol_76_g2, fortinet_fg-vm_payg_76_g2 | fortinet_fg-vm_byol_76_arm64, fortinet_fg-vm_payg_76_arm64 |
+    | 8.0 | fortinet_fg-vm_byol_80, fortinet_fg-vm_payg_80 | fortinet_fg-vm_byol_80_g2, fortinet_fg-vm_payg_80_g2 | fortinet_fg-vm_byol_80_arm64, fortinet_fg-vm_payg_80_arm64 |
+
+    the full, up-to-date list of available skus can be retrieved with the azure cli:
+
+    ```bash
+    az vm image list --all --publisher fortinet --offer fortinet_fortigate-vm --output table
+    ```
 
 ### Azure CLI
 
@@ -76,7 +96,7 @@ The ARM template deploys different resources and it is required to have the acce
 
 - The Azure Standard Load Balancer only supports TCP and UDP protocols (HTTPS, DNS, SSH, ...). To create a highly available architecture where you can use other protocols an architecture with the SDN Connector failover is preferred. More details can be found [here](https://docs.microsoft.com/en-us/azure/load-balancer/components)
 - In case of failover the Azure Load Balancer will sends existing sessions to the failed VM as explained [here](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-custom-probe-overview#probedown).
-- The template will deploy Standard F4s VMs for this architecture. Other VM instances are supported as well with a minimum of 4 NICs. A list can be found [here](https://docs.fortinet.com/document/fortigate-public-cloud/7.4.0/azure-administration-guide/562841/instance-type-support)
+- Different instance types are supported, the template contain a default option, other vm instances are supported as well with a minimum of 4 NICs, or 3 NICs when the `fortiGateHAPortMode` parameter is set to `3-NIC` (requires fortios 7.0.1 or later). A list of supprted instance types can be found [here](https://docs.fortinet.com/document/fortigate-public-cloud/7.4.0/azure-administration-guide/562841/instance-type-support)
 - Licenses for FortiGate
   - BYOL: A demo license can be made available via your Fortinet partner or on our website. These can be injected during deployment or added after deployment. Purchased licenses need to be registered on the [Fortinet support site](http://support.fortinet.com). Download the .lic file after registration. Note, these files may not work until 60 minutes after it's initial creation.
   - PAYG or OnDemand: These licenses are automatically generated during the deployment of the FortiGate systems.
@@ -100,12 +120,13 @@ The FortiGate VMs need a specific configuration to match the deployed environmen
   - [IPSEC configuration](#inbound-ipsec-configuration)
 - [Outbound connections](#outbound-connections)
   - [NAT considerations: 1-to-1 and 1-to-many](#outbound-connections---nat-considerations)
-- [IPSEC Connectivity](../Documentation/faq-ipsec-connectivity.md)
+- [IPSEC Connectivity](https://community.fortinet.com/fortigate-azure-technical-learning-161/ipsec-vpn-connectivity-and-troubleshooting-for-fortigate-running-in-microsoft-azure-188604)
 - [High Availability](#high-availability-probe-configuration)
 - [Cloud-Init](#cloud-init)
 - [Availability Zone](#availability-zone)
+- [FGCP HA port mode (3-nic / 4-nic)](#fgcp-high-availability-mode-ports)
 - [Default configuration using this template](#default-configuration)
-- [Upload VHD](https://community.fortinet.com/t5/FortiGate-Azure-Technical/Deployment-of-FortiGate-VM-using-a-VHD-image-file/ba-p/320338)
+- [Upload VHD](https://community.fortinet.com/fortigate-azure-technical-learning-161/deployment-of-fortigate-vm-using-a-vhd-image-file-171850)
 
 ### Fabric Connector
 
@@ -211,7 +232,7 @@ An example of the configuration of the FortiGate can be found [here](#fortigate)
 
 For trafic destined to terminate on the FortiGate VMs (e.g. IPSEC tunnels, SSL VPN, ...) the FortiGate is by default not aware of the public IP address attached to the Azure Load Balancer. In this case, where you have the service part of the FortiGate VMs it is best practice to disable the Floating IP option.
 
-An example of the configuration of the FortiGate can be found [here](#configuration---ipsec).
+An example of the configuration of the FortiGate can be found [here](#inbound-ipsec-configuration).
 
 #### Inbound configuration
 
@@ -220,7 +241,7 @@ To configure the inbound connectivity to a service there are 2 resources that ne
 - Azure Standard Load Balancer rules
 - FortiGate
 
-The drawing in the [flow](#flow) section is used in the configuration screenshots with a standard public IP in Azure of 51.124.146.120 and the backend VM having the internal IP 172.16.137.4.
+The drawing in the [flow](#inbound-flow) section is used in the configuration screenshots with a standard public IP in Azure of 51.124.146.120 and the backend VM having the internal IP 172.16.137.4.
 
 ##### Azure Standard Load Balancer
 
@@ -368,6 +389,7 @@ The NAT behind the FortiGate outgoing interface allows for a very simple configu
 
 #### Limitations
 
+- In the template, the setting `allocatedOutboundPorts` to 0 enables automatic, dynamic port allocation on your Azure Load Balancer or NAT Gateway. Instead of giving every backend virtual machine a fixed number of ports, Azure dynamically adjusts how many SNAT (Source Network Address Translation) ports are given to each backend instance based on the total number of machines in the pool. It is important to review your specific deployment and requirements to avoid any SNAT port exhaustion.
 - Azure has certain limitations on outbound connections, [more info](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#limitations)
 - Azure has a limited number of outbound ports it can allocated per public ip. More information and optimisations can be found [here](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#preallocatedports)
 - In case of failover the Azure Load Balancer will sends existing sessions to the failed VM as explained [here](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-custom-probe-overview#probedown).
@@ -407,7 +429,7 @@ To configure the 1-to-1 outbound connectivity to a service there are 2 resources
 
 The drawing in the [flow](#outbound-nat-flow) section is used in the configuration screenshots with a standard public IP in Azure of 40.114.187.146 on the Azure Load Balancer, the FortiGate private IP of 172.16.136.5 (primary) or 172.16.136.6 (secondary) and the backend VM having the internal IP 172.16.137.4.
 
-##### Azure portal
+##### Azure Portal
 
 1. Create a new public IP in Azure. Make sure to match the other public IP SKUs used connected to the FortiGate cluster and Azure Load Balancer. The SKU needs to be 'Standard' when using the Azure Load Balancer in this setup.
 
@@ -535,7 +557,7 @@ config system probe-response
 end
 ```
 
-The Microsoft Azure Load Balancer sends out probes from a specific IP, 168.63.129.16. This IP requires to have a response from the same interface as it packet arrived from. To ensure that the probes send for the external or internal load balancer is send via the correct interface, the configuration deployed by the template adds static routes for this Microsoft probe IP for both the external and internal interface of the firewall.
+The Azure Load Balancer sends out probes from a specific IP, 168.63.129.16. This IP requires to have a response from the same interface as it packet arrived from. To ensure that the probes send for the external or internal load balancer is send via the correct interface, the configuration deployed by the template adds static routes for this Microsoft probe IP for both the external and internal interface of the firewall.
 
 More information about this probe and the source IP can he found [here](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-custom-probe-overview#probesource)
 
@@ -560,7 +582,7 @@ Microsoft Azure offers the possibility to inject a configuration during deployme
 
 #### Inline configuration file
 
-In this ARM template, a FortiGate configuration is passed via the customdata field used by Azure for the Cloud-Init process. Using variables and parameters you can customize the configuration based on the input provided during deployment. The full configuration injected during deployment with the default parameters can be found [here](config-provisioning.md).
+In this ARM template, a FortiGate configuration is passed via the customdata field used by Azure for the Cloud-Init process. Using variables and parameters you can customize the configuration based on the input provided during deployment. The full configuration injected during deployment with the default parameters can be found [here](#default-configuration).
 
 ```text
 ...
@@ -680,9 +702,41 @@ Based on information in the presentation ['Inside Azure datacenter architecture 
 
 ![active/passive design](images/fgt-ap-az.png)
 
+### FGCP high availability mode ports
+
+FGCP support both having separate ha sync and ha management ports (`4-NIC`, the default) or combined onto a single port (`3-NIC`). During deployment you can select the either of these HA modes. Newer instances types on Microsoft Azure support 3 Nic starting from 3 vCPUs.
+
+When using the ARM template for customization, the `fortiGateHAPortMode` ARM template parameter controls the ports used (`4-NIC` or `3-NIC`, default `4-NIC`).
+
+- **4-nic** (default): port3 is dedicated to ha sync, and port4 is dedicated to ha management with its own subnet and public ip. this is the traditional deployment and remains fully backward compatible
+- **3-nic**: requires fortios 7.0.1 or later ([bug id 670058](https://docs.fortinet.com/document/fortigate/7.0.1/fortios-release-notes/743723/new-features-or-enhancements)). port3 carries both ha sync and ha management. the dedicated ha management subnet (subnet4) is not deployed, and the management public ip is attached directly to port3's private ip instead of a separate port4 interface. this mode allows deployment on instance types that only support 3 NICs
+
+example port3 configuration in `3-NIC` mode (fortigate a):
+
+```text
+config system interface
+  edit port3
+    set mode static
+    set ip 172.16.136.133/26
+    set description hasyncport
+    set allowaccess ping https ssh ftm
+  next
+end
+config system ha
+  ...
+  config ha-mgmt-interfaces
+    edit 1
+      set interface port3
+      set gateway 172.16.136.129
+    next
+  end
+  ...
+end
+```
+
 ### Default configuration
 
-After deployment, the below configuration has been automatically injected during the deployment. The bold sections are the default values. If parameters have been changed during deployment these values will be different.
+After deployment, the below configuration has been automatically injected during the deployment. the bold sections are the default values. If parameters have been changed during deployment these values will be different. The example below shows the default `4-NIC` ha port mode. For the `3-NIC` port3 configuration, review the [FGCP high availability mode ports](#fgcp-high-availability-mode-ports).
 
 #### FortiGate A
 
@@ -848,7 +902,7 @@ There are different components in the whole delivery chain
 - [Network Security Groups](#troubleshooting-network-security-groups-nsg)
 - [Standard Public IP](#troubleshooting-standard-public-ip)
 - [FortiGate](#troubleshooting-fortigate)
-- [IPSEC Troubleshooting](../Documentation/faq-ipsec-connectivity.md#troubleshooting)
+- [IPSEC Troubleshooting](https://community.fortinet.com/fortigate-azure-technical-learning-161/ipsec-vpn-connectivity-and-troubleshooting-for-fortigate-running-in-microsoft-azure-188604)
 
 ### Troubleshooting Azure Load Balancer
 
