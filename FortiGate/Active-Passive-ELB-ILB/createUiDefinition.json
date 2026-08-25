@@ -432,7 +432,8 @@
                   "Standard_D4alds_v6",
                   "Standard_D8alds_v6",
                   "Standard_D16alds_v6",
-                  "Standard_D32alds_v6"
+                  "Standard_D32alds_v6",
+                  "Standard_F4ads_v7"
                 ],
                 "constraints": {
                   "allowedSizes": [
@@ -499,7 +500,8 @@
                     "Standard_D4alds_v6",
                     "Standard_D8alds_v6",
                     "Standard_D16alds_v6",
-                    "Standard_D32alds_v6"
+                    "Standard_D32alds_v6",
+                    "Standard_F4ads_v7"
                   ]
                 },
                 "options": {
