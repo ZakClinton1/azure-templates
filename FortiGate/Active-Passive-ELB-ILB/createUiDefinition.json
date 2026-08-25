@@ -418,7 +418,9 @@
                     "Standard_D32as_v7",
                     "Standard_D8als_v7",
                     "Standard_D16als_v7",
-                    "Standard_D32als_v7"
+                    "Standard_D32als_v7",
+                    "Standard_F4as_v7",
+                    "Standard_F4ads_v7"
                 ],
                 "constraints": {
                   "allowedSizes": [
@@ -478,7 +480,9 @@
                     "Standard_D32as_v7",
                     "Standard_D8als_v7",
                     "Standard_D16als_v7",
-                    "Standard_D32als_v7"
+                    "Standard_D32als_v7",
+                    "Standard_F4as_v7",
+                    "Standard_F4ads_v7"
                   ]
                 },
                 "options": {
